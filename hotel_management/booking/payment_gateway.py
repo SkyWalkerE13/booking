@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 import stripe
 
-stripe.api_key = "sk_test_51R5kz5H2oVqCHMNhzJNHJd6pg3ntUn9Jckyd2VFJCjpszGa79osT2HGQDPQOLtO9ixhUnMKcVpN5PQ0myAaQdgRd00rZhTs3z0"
+stripe.api_key = "#"
 
 
 class PaymentGateway:
