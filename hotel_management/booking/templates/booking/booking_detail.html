@@ -1,10 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% load static %}
+{% extends 'base.html' %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Детали бронирования</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Информация о номере</h4>
+                            <p><strong>Номер:</strong> {{ booking.room.get_room_type_display }} {{ booking.room.number }}</p>
+                            <p><strong>Период бронирования:</strong> {{ booking.check_in_date }} - {{ booking.check_out_date }}</p>
+                            <p><strong>Количество ночей:</strong> {{ booking.nights }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Стоимость</h4>
+                            <p><strong>Цена за ночь:</strong> {{ booking.room.price_per_night }} ₽</p>
+                            <p><strong>Общая стоимость:</strong> {{ booking.total_price }} ₽</p>
+                            <p><strong>Статус:</strong> 
+                                <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h4>Детали гостя</h4>
+                            <p><strong>Имя:</strong> {{ booking.guest_name }}</p>
+                            <p><strong>Email:</strong> {{ booking.guest_email }}</p>
+                            <p><strong>Телефон:</strong> {{ booking.guest_phone }}</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'my_bookings' %}" class="btn btn-secondary">Мои бронирования</a>
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'payment' booking.id %}" class="btn btn-primary">Оплатить</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

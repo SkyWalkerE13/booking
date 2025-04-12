@@ -3,4 +3,4 @@ Pillow==9.5.0  # для работы с изображениями
 django-crispy-forms==2.0
 crispy-bootstrap4==2022.1
 # Если нужна интеграция со Stripe
-# stripe==5.4.0
+stripe==5.4.0

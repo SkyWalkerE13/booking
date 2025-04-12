@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'booking/css/bootstrap.min.css' %}">  <!-- Подключение Bootstrap -->
+    <link rel="stylesheet" href="{% static 'booking/css/style.css' %}">  <!-- Подключение вашего стиля -->
+    <title>Результаты поиска</title>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Результаты поиска</h1>
+
+        {% if hotels %}
+            <div class="row">
+                {% for hotel in hotels %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card">
+                            <img src="{% static 'booking/img/hotel-1.jpg' %}" class="card-img-top" alt="{{ hotel.name }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ hotel.name }}</h5>
+                                <p class="card-text">Тип номера: {{ hotel.room_type }}</p>
+                                <p class="card-text">Цена за ночь: {{ hotel.price_per_night }} руб.</p>
+                                <p class="card-text">Местоположение: {{ hotel.location }}</p>
+                                <a href="{% url 'book_room' hotel.id %}" class="btn btn-primary">Забронировать</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>К сожалению, по вашему запросу ничего не найдено.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

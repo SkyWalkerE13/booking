@@ -1,10 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in room.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ room.number }}">
+                            </div>
+                        {% empty %}
+                            <div class="carousel-item active">
+                                <img src="{% static 'default_room.jpg' %}" class="d-block w-100" alt="{{ room.number }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Предыдущий</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Следующий</span>
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <h2 class="card-title">{{ room.get_room_type_display }} {{ room.number }}</h2>
+                    <p class="card-text">{{ room.description }}</p>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h4>Удобства</h4>
+                            <ul class="list-unstyled">
+                                {% for amenity in room.amenities.all %}
+                                    <li><i class="fas fa-check text-success me-2"></i>{{ amenity.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Информация о номере</h4>
+                            <p><strong>Вместимость:</strong> {{ room.capacity }} гостей</p>
+                            <p><strong>Площадь:</strong> {{ room.area }} м²</p>
+                            <p><strong>Цена за ночь:</strong> <span class="h4 text-primary">{{ room.price_per_night }} ₽</span></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'book_room' room.id %}" class="btn btn-primary btn-lg w-100">
+                            Забронировать номер
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Проверить доступность</h4>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{% url 'room_detail' room.id %}">
+                        <div class="mb-3">
+                            <label for="check_in_date" class="form-label">Дата заезда</label>
+                            <input type="date" class="form-control" id="check_in_date" name="check_in_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="check_out_date" class="form-label">Дата выезда</label>
+                            <input type="date" class="form-control" id="check_out_date" name="check_out_date">
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            Проверить доступность
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

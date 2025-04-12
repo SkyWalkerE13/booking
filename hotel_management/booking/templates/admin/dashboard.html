@@ -1,10 +1,320 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Панель администратора{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-left: 4px solid;
+        border-radius: 4px;
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-pending { border-left-color: #ffc107; }
+    .card-confirmed { border-left-color: #28a745; }
+    .card-cancelled { border-left-color: #dc3545; }
+    .card-total { border-left-color: #007bff; }
+    
+    .admin-sidebar {
+        background-color: #343a40;
+        min-height: calc(100vh - 56px);
+        padding-top: 20px;
+    }
+    
+    .admin-sidebar .nav-link {
+        color: rgba(255,255,255,.75);
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+    }
+    
+    .admin-sidebar .nav-link:hover,
+    .admin-sidebar .nav-link.active {
+        color: #fff;
+        background-color: rgba(255,255,255,.1);
+    }
+    
+    .admin-sidebar .nav-link i {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Боковое меню администратора -->
+        <div class="col-md-2 admin-sidebar text-white">
+            <h5 class="px-3 mb-3">Управление</h5>
+            <div class="nav flex-column">
+                <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                    <i class="fas fa-tachometer-alt"></i> Панель управления
+                </a>
+                <a class="nav-link" href="{% url 'admin_bookings' %}">
+                    <i class="fas fa-calendar-check"></i> Бронирования
+                </a>
+                <a class="nav-link" href="{% url 'admin_hotels' %}">
+                    <i class="fas fa-hotel"></i> Отели
+                </a>
+                <a class="nav-link" href="{% url 'admin_rooms' %}">
+                    <i class="fas fa-door-open"></i> Номера
+                </a>
+                <a class="nav-link" href="{% url 'admin_users' %}">
+                    <i class="fas fa-users"></i> Пользователи
+                </a>
+                <a class="nav-link" href="{% url 'admin_reviews' %}">
+                    <i class="fas fa-star"></i> Отзывы
+                </a>
+            </div>
+            <hr>
+            <div class="nav flex-column">
+                <a class="nav-link" href="{% url 'home' %}">
+                    <i class="fas fa-arrow-left"></i> Вернуться на сайт
+                </a>
+            </div>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="col-md-10 py-4">
+            <h2 class="mb-4">Панель управления</h2>
+            
+            <!-- Статистические карточки -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stats-card card-total shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Всего бронирований</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_bookings }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stats-card card-pending shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Ожидают подтверждения</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_bookings }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stats-card card-confirmed shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Подтвержденные</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ confirmed_bookings }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stats-card card-cancelled shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Отмененные</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cancelled_bookings }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Недавние бронирования -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Недавние бронирования</h6>
+                    <a href="{% url 'admin_bookings' %}" class="btn btn-sm btn-primary">Все бронирования</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Пользователь</th>
+                                    <th>Отель / Номер</th>
+                                    <th>Даты</th>
+                                    <th>Статус</th>
+                                    <th>Цена</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.user.username }}</td>
+                                    <td>{{ booking.room.hotel.name }} / {{ booking.room.number }}</td>
+                                    <td>{{ booking.check_in|date:"d.m.Y" }} - {{ booking.check_out|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Ожидает</span>
+                                        {% elif booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Подтверждено</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Отменено</span>
+                                        {% elif booking.status == 'completed' %}
+                                            <span class="badge bg-info">Завершено</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ booking.total_price }} ₽</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'admin_booking_detail' booking.id %}" class="btn btn-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if booking.status == 'pending' %}
+                                            <a href="{% url 'admin_booking_confirm' booking.id %}" class="btn btn-success">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Нет бронирований</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Показатели и аналитика -->
+            <div class="row">
+                <!-- Заполненность отелей -->
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Заполненность отелей</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="occupancyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Статистика бронирований по дням -->
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Бронирования за последний месяц</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="bookingsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Данные для графика заполненности отелей (пример)
+        var hotelLabels = ["Гранд Отель", "Морской бриз", "Бизнес Плаза", "Горный Пик"];
+        var occupancyData = [85, 70, 65, 90];
+        var ctx = document.getElementById('occupancyChart').getContext('2d');
+        var occupancyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: hotelLabels,
+                datasets: [{
+                    label: 'Заполненность (%)',
+                    data: occupancyData,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Данные для графика бронирований за месяц (пример)
+        var dateLabels = ["1", "5", "10", "15", "20", "25", "30"];
+        var bookingsData = [3, 7, 5, 12, 9, 6, 8];
+        var ctx2 = document.getElementById('bookingsChart').getContext('2d');
+        var bookingsChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: dateLabels,
+                datasets: [{
+                    label: 'Количество бронирований',
+                    data: bookingsData,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

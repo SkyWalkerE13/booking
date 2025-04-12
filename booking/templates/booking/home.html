@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ОтельСервис - Главная{% endblock %}
+
+{% block header_content %}
+<!-- Carousel Start -->
+<div class="container-fluid p-0 mb-5">
+    <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img class="w-100" src="{% static 'booking/img/carousel-1.jpg' %}" alt="Image">
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                    <div class="p-3" style="max-width: 700px;">
+                        <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">Роскошный отдых</h6>
+                        <h1 class="display-3 text-white mb-4 animated slideInDown">Откройте для себя лучшие отели России</h1>
+                        <a href="{% url 'hotels' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Наши отели</a>
+                        <a href="{% url 'register' %}" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Забронировать сейчас</a>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img class="w-100" src="{% static 'booking/img/carousel-2.jpg' %}" alt="Image">
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                    <div class="p-3" style="max-width: 700px;">
+                        <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">Незабываемый отдых</h6>
+                        <h1 class="display-3 text-white mb-4 animated slideInDown">Комфорт и сервис высшего класса</h1>
+                        <a href="{% url 'hotels' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Наши отели</a>
+                        <a href="{% url 'register' %}" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Забронировать сейчас</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Назад</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Вперед</span>
+        </button>
+    </div>
+</div>
+<!-- Carousel End -->
+{% endblock %}
+
+{% block content %}
+<!-- Hotels Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="section-title bg-white text-center text-primary px-3">Отели</h6>
+            <h1 class="mb-5">Популярные отели</h1>
+        </div>
+        <div class="row g-4">
+            {% for hotel in hotels %}
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="package-item">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="{% static 'booking/img/package-1.jpg' %}" alt="">
+                    </div>
+                    <div class="d-flex border-bottom">
+                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ hotel.address }}</small>
+                        <small class="flex-fill text-center py-2"><i class="fa fa-star text-primary me-2"></i>{{ hotel.rating }} / 5</small>
+                    </div>
+                    <div class="text-center p-4">
+                        <h3 class="mb-0">{{ hotel.name }}</h3>
+                        <div class="mb-3">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= hotel.rating %}
+                                    <small class="fa fa-star text-primary"></small>
+                                {% else %}
+                                    <small class="fa fa-star text-secondary"></small>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p>{{ hotel.description|truncatechars:100 }}</p>
+                        <div class="d-flex justify-content-center mb-2">
+                            <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-sm btn-primary px-3 border-end" style="border-radius: 30px 0 0 30px;">Подробнее</a>
+                            <a href="{% url 'hotel_rooms' hotel.id %}" class="btn btn-sm btn-primary px-3" style="border-radius: 0 30px 30px 0;">Номера</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- Hotels End -->
+
+<!-- Booking Start -->
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="container">
+        <div class="booking p-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-md-6 text-white">
+                    <h6 class="text-white text-uppercase">Бронирование</h6>
+                    <h1 class="text-white mb-4">Онлайн бронирование</h1>
+                    <p class="mb-4">Быстрое и удобное бронирование номеров онлайн. Выберите отель, даты и наслаждайтесь отдыхом!</p>
+                    <p class="mb-4">Никаких предоплат. Бесплатная отмена бронирования. Лучшие цены.</p>
+                </div>
+                <div class="col-md-6">
+                    <h1 class="text-white mb-4">Поиск номеров</h1>
+                    <form action="{% url 'search_rooms' %}" method="get">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control bg-transparent" name="hotel_name" id="hotel_name" placeholder="Отель">
+                                    <label for="hotel_name">Отель</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select bg-transparent" name="room_type" id="room_type">
+                                        <option value="">Выберите тип номера</option>
+                                        <option value="standard">Стандартный</option>
+                                        <option value="deluxe">Делюкс</option>
+                                        <option value="suite">Люкс</option>
+                                        <option value="family">Семейный</option>
+                                    </select>
+                                    <label for="room_type">Тип номера</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating date" id="date_checkin">
+                                    <input type="date" class="form-control bg-transparent" name="checkin" id="checkin" placeholder="Дата заезда">
+                                    <label for="checkin">Дата заезда</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating date" id="date_checkout">
+                                    <input type="date" class="form-control bg-transparent" name="checkout" id="checkout" placeholder="Дата выезда">
+                                    <label for="checkout">Дата выезда</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select class="form-select bg-transparent" name="guests" id="guests">
+                                        <option value="1">1 гость</option>
+                                        <option value="2">2 гостя</option>
+                                        <option value="3">3 гостя</option>
+                                        <option value="4">4 гостя</option>
+                                    </select>
+                                    <label for="guests">Кол-во гостей</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-outline-light w-100 py-3" type="submit">Поиск номеров</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Booking End -->
+{% endblock %} 

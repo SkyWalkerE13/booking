@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Номера отеля - HMS{% endblock %}
+
+{% block header_content %}
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 hero-header">
+    <div class="container py-5">
+        <div class="row justify-content-center py-5">
+            <div class="col-lg-10 pt-lg-5 mt-lg-5 text-center">
+                <h1 class="display-3 text-white animated slideInDown">Номера отеля</h1>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Header End -->
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h2 class="mb-4">Доступные номера</h2>
+            <ul class="list-group">
+                {% for room in rooms %}
+                <li class="list-group-item">
+                    <h5>{{ room.name }}</h5>
+                    <img class="img" src="{% static 'images/596325140.jpg' %}" alt="">
+                    <p>Цена: {{ room.price }} $.</p>
+                    <p>Описание: {{ room.description }}</p>
+                    <p>Статус: {{ room.available|yesno:"Доступен,Занят" }}</p>
+                </li>
+                {% empty %}
+                <li class="list-group-item">Нет доступных номеров.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

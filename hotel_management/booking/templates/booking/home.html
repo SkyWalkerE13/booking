@@ -1,96 +1,175 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 
-{% block content %}
-<div class="container-fluid search-container text-white mb-4">
-    <div class="container">
-        <h1 class="text-center mb-4">Найдите идеальный отель для вашего путешествия</h1>
-        
-        <form method="GET" action="{% url 'room_list' %}" class="row g-3">
-            <div class="col-md-3">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                    <input type="text" class="form-control" placeholder="Куда отправляемся?" name="location">
+{% block title %}HMS-Main{% endblock %}
+
+{% block header_content %}
+<!-- Header Start -->
+<div class="container-fluid bg-primary py-5 mb-5 hero-header">
+    <div class="container py-5">
+        <div class="row justify-content-center py-5">
+            <div class="col-lg-10 pt-lg-5 mt-lg-5 text-center">
+                <h1 class="display-3 text-white animated slideInDown">Найдите идеальный отель для вашего отдыха</h1>
+                <p class="fs-4 text-white mb-4 animated slideInDown">Лучшие отели мира комфортабельными номерами и первоклассным сервисом</p>
+                <div class="position-relative w-75 mx-auto animated slideInDown">
+                    <form action="{% url 'search_rooms' %}" method="get">
+                        <input class="form-control border-0 rounded-pill w-100 py-3 ps-4 pe-5" type="text" 
+                               name="query" placeholder="Найти отель или номер">
+                        <button type="submit" class="btn btn-primary rounded-pill py-2 px-4 position-absolute top-0 end-0 me-2" 
+                                style="margin-top: 7px;">Поиск</button>
+                    </form>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                    <input type="date" class="form-control" name="check_in_date">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                    <input type="date" class="form-control" name="check_out_date">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-search"></i> Найти номера
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+<!-- Header End -->
+{% endblock %}
 
-<div class="container">
-    <h2 class="text-center mb-4">Популярные номера</h2>
-    
-    <div class="row">
-        {% for room in rooms %}
-        <div class="col-md-4 mb-4">
-            <div class="card room-card">
-                {% if room.images.first %}
-                    <img src="{{ room.images.first.image.url }}" class="card-img-top" alt="{{ room.number }}">
-                {% else %}
-                    <img src="{% static 'default_room.jpg' %}" class="card-img-top" alt="{{ room.number }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ room.get_room_type_display }} {{ room.number }}</h5>
-                    <p class="card-text">{{ room.description|truncatewords:15 }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="h4 text-primary mb-0">{{ room.price_per_night }} ₽/ночь</span>
-                        <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-primary">Подробнее</a>
+{% block content %}
+<!-- About Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="min-height: 400px;">
+                <div class="position-relative h-100">
+                    <img class="img-fluid position-absolute w-100 h-100" src="{% static 'booking/img/about.jpg' %}" alt="" style="object-fit: cover;">
+                </div>
+            </div>
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
+                <h6 class="section-title bg-white text-start text-primary pe-3">О нас</h6>
+                <h1 class="mb-4">Добро пожаловать в <span class="text-primary">Hotel Master System</span></h1>
+                <p class="mb-4">Мы предлагаем лучшие отели с комфортабельными номерами и высоким уровнем обслуживания.</p>
+                <p class="mb-4">Наша цель - сделать ваш отдых комфортным и незабываемым.</p>
+                <div class="row gy-2 gx-4 mb-4">
+                    <div class="col-sm-6">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Первоклассные отели</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Профессиональное обслуживание</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>24/7 поддержка</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Лучшие цены</p>
+                    </div>
+                </div>
+                <a class="btn btn-primary py-3 px-5 mt-2" href="{% url 'about' %}">Узнать больше</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- About End -->
+
+<!-- Hotels Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="section-title bg-white text-center text-primary px-3">Отели</h6>
+            <h1 class="mb-5">Популярные отели</h1>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% for hotel in hotels %}
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="package-item">
+                    <div class="overflow-hidden">
+                        <img class="img-fluid" src="{% static 'booking/img/hotel-default.jpg' %}" alt="">
+                    </div>
+                    <div class="d-flex border-bottom">
+                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ hotel.address }}</small>
+                        <small class="flex-fill text-center py-2"><i class="fa fa-star text-primary me-2"></i>{{ hotel.rating }} (5)</small>
+                    </div>
+                    <div class="text-center p-4">
+                        <h3 class="mb-0">{{ hotel.name }}</h3>
+                        <div class="mb-3">
+                            <small class="fa fa-star text-primary"></small>
+                            <small class="fa fa-star text-primary"></small>
+                            <small class="fa fa-star text-primary"></small>
+                            <small class="fa fa-star text-primary"></small>
+                            <small class="fa fa-star text-primary"></small>
+                        </div>
+                        <p>{{ hotel.description|truncatewords:20 }}</p>
+                        <div class="d-flex justify-content-center mb-2">
+                            <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-sm btn-primary px-3 border-end" style="border-radius: 30px 0 0 30px;">Подробнее</a>
+                            <a href="{% url 'hotel_rooms' hotel.id %}" class="btn btn-sm btn-primary px-3" style="border-radius: 0 30px 30px 0;">Номера</a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
-
-    <div class="text-center mt-4">
-        <a href="{% url 'room_list' %}" class="btn btn-primary btn-lg">
-            Смотреть все номера
-        </a>
-    </div>
-
-    <!-- Преимущества -->
-    <section class="mt-5">
-        <h2 class="text-center mb-4">Почему выбирают нас</h2>
-        <div class="row text-center">
-            <div class="col-md-4">
-                <div class="p-4">
-                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
-                    <h4>Безопасные бронирования</h4>
-                    <p>Все транзакции защищены современными технологиями безопасности.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-4">
-                    <i class="fas fa-tags fa-3x text-primary mb-3"></i>
-                    <h4>Лучшие цены</h4>
-                    <p>Гарантируем самые низкие цены на рынке.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="p-4">
-                    <i class="fas fa-headset fa-3x text-primary mb-3"></i>
-                    <h4>Круглосуточная поддержка</h4>
-                    <p>Наши менеджеры всегда готовы помочь вам.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 </div>
-{% endblock %}
+<!-- Hotels End -->
+
+<!-- Booking Start -->
+<div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="container">
+        <div class="booking p-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-md-6 text-white">
+                    <h6 class="text-white text-uppercase">Бронирование</h6>
+                    <h1 class="text-white mb-4">Онлайн бронирование</h1>
+                    <p class="mb-4">Быстрое и удобное бронирование номеров онлайн. Выбирайте даты, комнаты и наслаждайтесь отдыхом!</p>
+                    <p class="mb-4">Никаких предоплат. Бесплатная отмена бронирования. Лучшие цены.</p>
+                    <a class="btn btn-outline-light py-3 px-5 mt-2" href="{% url 'hotels' %}">Забронировать сейчас</a>
+                    <a class="btn btn-outline-light py-3 px-5 mt-2" href="{% url 'hotels' %}">Стрница Бронирования</a>
+                </div>
+                <div class="col-md-6">
+                    <h1 class="text-white mb-4">Форма бронирования</h1>
+                    <form action="{% url 'search_rooms' %}" method="get">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control bg-transparent" name="hotel_name" id="hotel_name" placeholder="Отель">
+                                    <label for="hotel_name">Отель</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select bg-transparent" name="room_type" id="room_type">
+                                        <option value="">Выберите тип номера</option>
+                                        <option value="standard">Одноместный</option>
+                                        <option value="deluxe">Двухместный</option>
+                                        <option value="suite">Люкс</option>
+                                        <option value="family">Семейный</option>
+                                    </select>
+                                    <label for="room_type">Тип номера</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating date" id="date_checkin">
+                                    <input type="date" class="form-control bg-transparent" name="checkin" id="checkin" placeholder="Дата заезда">
+                                    <label for="checkin">Дата заезда</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating date" id="date_checkout">
+                                    <input type="date" class="form-control bg-transparent" name="checkout" id="checkout" placeholder="Дата выезда">
+                                    <label for="checkout">Дата выезда</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select class="form-select bg-transparent" name="guests" id="guests">
+                                        <option value="1">1 гость</option>
+                                        <option value="2">2 гостя</option>
+                                        <option value="3">3 гостя</option>
+                                        <option value="4">4 гостя</option>
+                                    </select>
+                                    <label for="guests">Кол-во гостей</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit">Забронировать</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Booking End -->
+{% endblock %} 

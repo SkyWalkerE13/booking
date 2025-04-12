@@ -1,10 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Оплата бронирования</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Детали бронирования</h4>
+                            <p><strong>Номер:</strong> {{ booking.room.get_room_type_display }} {{ booking.room.number }}</p>
+                            <p><strong>Период:</strong> {{ booking.check_in_date }} - {{ booking.check_out_date }}</p>
+                            <p><strong>Стоимость:</strong> {{ booking.total_price }} ₽</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Выберите способ оплаты</h4>
+                            <div class="list-group">
+                                <label class="list-group-item list-group-item-action">
+                                    <input class="form-check-input me-1" type="radio" name="payment_method" value="card">
+                                    Банковская карта
+                                </label>
+                                <label class="list-group-item list-group-item-action">
+                                    <input class="form-check-input me-1" type="radio" name="payment_method" value="paypal">
+                                    PayPal
+                                </label>
+                                <label class="list-group-item list-group-item-action">
+                                    <input class="form-check-input me-1" type="radio" name="payment_method" value="apple_pay">
+                                    Apple Pay
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="payment-form" method="post" class="mt-4">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">Оплатить {{ booking.total_price }} ₽</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-secondary">Отменить</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

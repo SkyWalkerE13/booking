@@ -1,10 +1,639 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
+{% url 'admin_dashboard' %}
 
-</body>
-</html>
+{% block title %}Отчеты и аналитика{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #343a40;
+        min-height: calc(100vh - 56px);
+        padding-top: 20px;
+    }
+    
+    .admin-sidebar .nav-link {
+        color: rgba(255,255,255,.75);
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+    }
+    
+    .admin-sidebar .nav-link:hover,
+    .admin-sidebar .nav-link.active {
+        color: #fff;
+        background-color: rgba(255,255,255,.1);
+    }
+    
+    .admin-sidebar .nav-link i {
+        margin-right: 10px;
+    }
+    
+    .report-card {
+        transition: all 0.3s;
+        border-radius: 8px;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .stat-income { border-left-color: #28a745; }
+    .stat-occupancy { border-left-color: #007bff; }
+    .stat-bookings { border-left-color: #6f42c1; }
+    .stat-reviews { border-left-color: #fd7e14; }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Боковое меню администратора -->
+        <div class="col-md-2 admin-sidebar text-white">
+            <h5 class="px-3 mb-3">Управление</h5>
+            <div class="nav flex-column">
+                <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                    <i class="fas fa-tachometer-alt"></i> Панель управления
+                </a>
+                <a class="nav-link" href="{% url 'admin_bookings' %}">
+                    <i class="fas fa-calendar-check"></i> Бронирования
+                </a>
+                <a class="nav-link" href="{% url 'admin_hotels' %}">
+                    <i class="fas fa-hotel"></i> Отели
+                </a>
+                <a class="nav-link" href="{% url 'admin_rooms' %}">
+                    <i class="fas fa-door-open"></i> Номера
+                </a>
+                <a class="nav-link" href="{% url 'admin_users' %}">
+                    <i class="fas fa-users"></i> Пользователи
+                </a>
+                <a class="nav-link" href="{% url 'admin_reviews' %}">
+                    <i class="fas fa-star"></i> Отзывы
+                </a>
+                <a class="nav-link active" href="{% url 'admin_reports' %}">
+                    <i class="fas fa-chart-bar"></i> Отчеты
+                </a>
+            </div>
+            <hr>
+            <div class="nav flex-column">
+                <a class="nav-link" href="{% url 'home' %}">
+                    <i class="fas fa-arrow-left"></i> Вернуться на сайт
+                </a>
+            </div>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="col-md-10 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Отчеты и аналитика</h2>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download"></i> Экспорт отчетов
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=financial&format=excel">Финансовый отчет (Excel)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=occupancy&format=excel">Отчет по загруженности (Excel)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=bookings&format=excel">Отчет по бронированиям (Excel)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=reviews&format=excel">Отчет по отзывам (Excel)</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=full&format=excel">Полный отчет (Excel)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_report_export' %}?report_type=full&format=pdf">Полный отчет (PDF)</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Период отчета -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Выберите период отчета</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Период</label>
+                            <select id="period" name="period" class="form-select" onchange="toggleDateInputs(this.value)">
+                                <option value="today" {% if request.GET.period =='today' %}selected{% endif %}>Сегодня</option>
+                                <option value="yesterday" {% if request.GET.period =='yesterday' %}selected{% endif %}>Вчера</option>
+                                <option value="this_week" {% if request.GET.period =='this_week' %}selected{% endif %}>Текущая неделя</option>
+                                <option value="last_week" {% if request.GET.period =='last_week' %}selected{% endif %}>Прошлая неделя</option>
+                                <option value="this_month" {% if request.GET.period =='this_month' %}selected{% endif %}>Текущий месяц</option>
+                                <option value="last_month" {% if request.GET.period =='last_month' %}selected{% endif %}>Прошлый месяц</option>
+                                <option value="this_year" {% if request.GET.period =='this_year' %}selected{% endif %}>Текущий год</option>
+                                <option value="custom" {% if request.GET.period =='custom' %}selected{% endif %}>Произвольный период</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 custom-date-input" style="display: {% if request.GET.period == 'custom' %}block{% else %}none{% endif %};">
+                            <label for="start_date" class="form-label">Дата начала</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                        </div>
+                        <div class="col-md-3 custom-date-input" style="display: {% if request.GET.period == 'custom' %}block{% else %}none{% endif %};">
+                            <label for="end_date" class="form-label">Дата окончания</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">Применить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Ключевые показатели -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card shadow h-100 py-2 stat-card stat-income">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Доход</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_revenue|floatformat:2 }} ₽</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-ruble-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="text-xs">
+                                {% if revenue_change > 0 %}
+                                <span class="text-success"><i class="fas fa-arrow-up"></i> {{ revenue_change }}% рост</span>
+                                {% elif revenue_change < 0 %}
+                                <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ revenue_change|abs }}% снижение</span>
+                                {% else %}
+                                <span class="text-muted">Без изменений</span>
+                                {% endif %}
+                                по сравнению с предыдущим периодом
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card shadow h-100 py-2 stat-card stat-occupancy">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Заполняемость</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ occupancy_rate }}%</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-bed fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="text-xs">
+                                {% if occupancy_change > 0 %}
+                                <span class="text-success"><i class="fas fa-arrow-up"></i> {{ occupancy_change }}% рост</span>
+                                {% elif occupancy_change < 0 %}
+                                <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ occupancy_change|abs }}% снижение</span>
+                                {% else %}
+                                <span class="text-muted">Без изменений</span>
+                                {% endif %}
+                                по сравнению с предыдущим периодом
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card shadow h-100 py-2 stat-card stat-bookings">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-purple text-uppercase mb-1">Бронирования</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_bookings }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="text-xs">
+                                {% if bookings_change > 0 %}
+                                <span class="text-success"><i class="fas fa-arrow-up"></i> {{ bookings_change }}% рост</span>
+                                {% elif bookings_change < 0 %}
+                                <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ bookings_change|abs }}% снижение</span>
+                                {% else %}
+                                <span class="text-muted">Без изменений</span>
+                                {% endif %}
+                                по сравнению с предыдущим периодом
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card shadow h-100 py-2 stat-card stat-reviews">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Средний рейтинг</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_rating|floatformat:1 }} <small class="text-muted">из 5</small></div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-star fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <div class="text-xs">
+                                {% if rating_change > 0 %}
+                                <span class="text-success"><i class="fas fa-arrow-up"></i> {{ rating_change }} рост</span>
+                                {% elif rating_change < 0 %}
+                                <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ rating_change|abs }} снижение</span>
+                                {% else %}
+                                <span class="text-muted">Без изменений</span>
+                                {% endif %}
+                                по сравнению с предыдущим периодом
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Графики и диаграммы -->
+            <div class="row">
+                <!-- График доходов -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">Динамика дохода</h6>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('revenue', 'day')">По дням</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('revenue', 'week')">По неделям</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('revenue', 'month')">По месяцам</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- График заполняемости -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">Заполняемость отелей</h6>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('occupancy', 'hotel')">По отелям</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('occupancy', 'room_type')">По типам номеров</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeChartView('occupancy', 'time')">По времени</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="occupancyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Распределение бронирований -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Статусы бронирований</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="bookingStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Распределение доходов по отелям -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Доход по отелям</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="hotelRevenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Распределение бронирований по типам номеров -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Тип номеров</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="roomTypeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Доступные отчеты -->
+            <h3 class="mb-4">Доступные отчеты</h3>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-money-bill-wave text-success"></i> Финансовый отчет</h5>
+                            <p class="card-text">Анализ доходов, средней стоимости номера, сезонных трендов и финансовых показателей.</p>
+                            <a href="{% url 'admin_financial_report' %}" class="btn btn-outline-success">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-chart-pie text-primary"></i> Отчет по загруженности</h5>
+                            <p class="card-text">Анализ заполняемости отелей, популярности номеров и эффективности использования номерного фонда.</p>
+                            <a href="{% url 'admin_occupancy_report' %}" class="btn btn-outline-primary">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-calendar-check text-purple"></i> Отчет по бронированиям</h5>
+                            <p class="card-text">Детальный анализ бронирований по периодам, статусам, каналам и распределению.</p>
+                            <a href="{% url 'admin_booking_report' %}" class="btn btn-outline-purple" style="border-color: #6f42c1; color: #6f42c1;">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-star text-warning"></i> Отчет по отзывам</h5>
+                            <p class="card-text">Анализ удовлетворенности гостей, рейтингов отелей и предложения по улучшению сервиса.</p>
+                            <a href="{% url 'admin_review_report' %}" class="btn btn-outline-warning">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-users text-info"></i> Отчет по клиентам</h5>
+                            <p class="card-text">Анализ клиентской базы, активности пользователей и демографических данных.</p>
+                            <a href="{% url 'admin_customer_report' %}" class="btn btn-outline-info">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow report-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-file-alt text-secondary"></i> Общий отчет</h5>
+                            <p class="card-text">Полный отчет, включающий данные со всех разделов для общего анализа работы системы.</p>
+                            <a href="{% url 'admin_general_report' %}" class="btn btn-outline-secondary">Просмотр отчета</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Функция для отображения/скрытия полей произвольного периода
+    function toggleDateInputs(value) {
+        const customDateInputs = document.querySelectorAll('.custom-date-input');
+        
+        customDateInputs.forEach(input => {
+            if (value === 'custom') {
+                input.style.display = 'block';
+            } else {
+                input.style.display = 'none';
+            }
+        });
+    }
+
+    // Функция для изменения представления графика
+    function changeChartView(chart, view) {
+        // Здесь будет логика переключения представления графиков
+        console.log(`Изменение представления графика ${chart} на ${view}`);
+        
+        // В реальном приложении здесь будет AJAX-запрос для получения новых данных
+        // и обновления графика
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Данные для графиков (в реальном приложении будут получены из контекста Django)
+        
+        // График доходов
+        const revenueData = {
+            labels: {{ revenue_labels|safe }},
+            datasets: [{
+                label: 'Доход (₽)',
+                data: {{ revenue_data|safe }},
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        };
+        
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: revenueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ₽';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // График заполняемости отелей
+        const occupancyData = {
+            labels: {{ hotel_labels|safe }},
+            datasets: [{
+                label: 'Заполняемость (%)',
+                data: {{ occupancy_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(occupancyCtx, {
+            type: 'bar',
+            data: occupancyData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // График статусов бронирований
+        const bookingStatusData = {
+            labels: ['Ожидает', 'Подтверждено', 'Отменено', 'Завершено'],
+            datasets: [{
+                data: {{ booking_status_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(23, 162, 184, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        const bookingStatusCtx = document.getElementById('bookingStatusChart').getContext('2d');
+        new Chart(bookingStatusCtx, {
+            type: 'pie',
+            data: bookingStatusData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15
+                        }
+                    }
+                }
+            }
+        });
+        
+        // График доходов по отелям
+        const hotelRevenueData = {
+            labels: {{ hotel_labels|safe }},
+            datasets: [{
+                data: {{ hotel_revenue_data|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        const hotelRevenueCtx = document.getElementById('hotelRevenueChart').getContext('2d');
+        new Chart(hotelRevenueCtx, {
+            type: 'doughnut',
+            data: hotelRevenueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15
+                        }
+                    }
+                }
+            }
+        });
+        
+        // График распределения по типам номеров
+        const roomTypeData = {
+            labels: ['Стандартный', 'Делюкс', 'Люкс', 'Семейный'],
+            datasets: [{
+                data: {{ room_type_data|safe }},
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        const roomTypeCtx = document.getElementById('roomTypeChart').getContext('2d');
+        new Chart(roomTypeCtx, {
+            type: 'polarArea',
+            data: roomTypeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

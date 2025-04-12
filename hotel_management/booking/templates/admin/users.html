@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Управление пользователями{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #343a40;
+        min-height: calc(100vh - 56px);
+        padding-top: 20px;
+    }
+    
+    .admin-sidebar .nav-link {
+        color: rgba(255,255,255,.75);
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+    }
+    
+    .admin-sidebar .nav-link:hover,
+    .admin-sidebar .nav-link.active {
+        color: #fff;
+        background-color: rgba(255,255,255,.1);
+    }
+    
+    .admin-sidebar .nav-link i {
+        margin-right: 10px;
+    }
+
+    .user-status-active { color: #28a745; }
+    .user-status-inactive { color: #dc3545; }
+    .user-status-staff { color: #007bff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Боковое меню администратора -->
+        <div class="col-md-2 admin-sidebar text-white">
+            <h5 class="px-3 mb-3">Управление</h5>
+            <div class="nav flex-column">
+                <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                    <i class="fas fa-tachometer-alt"></i> Панель управления
+                </a>
+                <a class="nav-link" href="{% url 'admin_bookings' %}">
+                    <i class="fas fa-calendar-check"></i> Бронирования
+                </a>
+                <a class="nav-link" href="{% url 'admin_hotels' %}">
+                    <i class="fas fa-hotel"></i> Отели
+                </a>
+                <a class="nav-link" href="{% url 'admin_rooms' %}">
+                    <i class="fas fa-door-open"></i> Номера
+                </a>
+                <a class="nav-link active" href="{% url 'admin_users' %}">
+                    <i class="fas fa-users"></i> Пользователи
+                </a>
+                <a class="nav-link" href="{% url 'admin_reviews' %}">
+                    <i class="fas fa-star"></i> Отзывы
+                </a>
+            </div>
+            <hr>
+            <div class="nav flex-column">
+                <a class="nav-link" href="{% url 'home' %}">
+                    <i class="fas fa-arrow-left"></i> Вернуться на сайт
+                </a>
+            </div>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="col-md-10 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Управление пользователями</h2>
+                <a href="{% url 'admin_user_add' %}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Добавить пользователя
+                </a>
+            </div>
+            
+            <!-- Фильтры -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Фильтры</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Поиск</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Имя пользователя, email..." value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="is_active" class="form-label">Статус</label>
+                            <select name="is_active" id="is_active" class="form-select">
+                                <option value="">Все пользователи</option>
+                                <option value="1" {% if request.GET.is_active =='1' %}selected{% endif %}>Активные</option>
+                                <option value="0" {% if request.GET.is_active =='0' %}selected{% endif %}>Неактивные</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="is_staff" class="form-label">Роль</label>
+                            <select name="is_staff" id="is_staff" class="form-select">
+                                <option value="">Все роли</option>
+                                <option value="1" {% if request.GET.is_staff =='1' %}selected{% endif %}>Администраторы</option>
+                                <option value="0" {% if request.GET.is_staff =='0' %}selected{% endif %}>Пользователи</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sort" class="form-label">Сортировка</label>
+                            <select name="sort" id="sort" class="form-select">
+                                <option value="username" {% if request.GET.sort =='username' %}selected{% endif %}>По имени</option>
+                                <option value="-date_joined" {% if request.GET.sort =='-date_joined' %}selected{% endif %}>Новые сверху</option>
+                                <option value="date_joined" {% if request.GET.sort =='date_joined' %}selected{% endif %}>Старые сверху</option>
+                                <option value="-booking_count" {% if request.GET.sort =='-booking_count' %}selected{% endif %}>По кол-ву бронирований</option>
+                            </select>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                            <a href="{% url 'admin_users' %}" class="btn btn-secondary">Сбросить</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Список пользователей -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Имя пользователя</th>
+                                    <th>Email</th>
+                                    <th>Статус</th>
+                                    <th>Роль</th>
+                                    <th>Дата регистрации</th>
+                                    <th>Бронирований</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Неактивен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_superuser %}
+                                            <span class="badge bg-danger">Суперпользователь</span>
+                                        {% elif user.is_staff %}
+                                            <span class="badge bg-primary">Администратор</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Пользователь</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ user.bookings.count }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Действия
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{% url 'admin_user_detail' user.id %}">Профиль</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'admin_user_bookings' user.id %}">Бронирования</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'admin_user_edit' user.id %}">Редактировать</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                {% if user.is_active %}
+                                                <li><a class="dropdown-item text-danger" href="{% url 'admin_user_toggle_active' user.id %}">Деактивировать</a></li>
+                                                {% else %}
+                                                <li><a class="dropdown-item text-success" href="{% url 'admin_user_toggle_active' user.id %}">Активировать</a></li>
+                                                {% endif %}
+                                                {% if not user.is_staff %}
+                                                <li><a class="dropdown-item text-primary" href="{% url 'admin_user_toggle_staff' user.id %}">Сделать администратором</a></li>
+                                                {% else %}
+                                                <li><a class="dropdown-item text-warning" href="{% url 'admin_user_toggle_staff' user.id %}">Сделать обычным пользователем</a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Пользователи не найдены</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Пагинация -->
+            {% if users.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if users.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.is_staff %}&is_staff={{ request.GET.is_staff }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in users.paginator.page_range %}
+                        {% if users.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.is_staff %}&is_staff={{ request.GET.is_staff }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if users.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.is_staff %}&is_staff={{ request.GET.is_staff }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+:root {
+    --primary-color: #0071c2;
+    --secondary-color: #003580;
+    --accent-color: #f2f2f2;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--accent-color);
+}
+
+.navbar {
+    background-color: var(--primary-color);
+}
+
+.navbar-brand {
+    color: white !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: white !important;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.02);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--secondary-color);
+}
+
+.search-container {
+    background-color: var(--secondary-color);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.room-card .card-img-top {
+    height: 250px;
+    object-fit: cover;
+}

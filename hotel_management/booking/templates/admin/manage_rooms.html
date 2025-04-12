@@ -1,10 +1,599 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'admin/base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Управление номерами{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .room-card {
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .room-image {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        border-radius: 20px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .status-available {
+        background-color: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+    
+    .status-unavailable {
+        background-color: rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+    
+    .room-price {
+        font-weight: bold;
+        color: #0071c2;
+    }
+    
+    .room-capacity {
+        color: #666;
+    }
+    
+    .filter-card {
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .action-buttons {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .room-card:hover .action-buttons {
+        opacity: 1;
+    }
+    
+    .hotel-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    .pagination {
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .room-type-badge {
+        font-size: 0.8rem;
+        border-radius: 4px;
+        padding: 3px 8px;
+        margin-right: 5px;
+    }
+    
+    .type-standard { background-color: #e9ecef; color: #495057; }
+    .type-deluxe { background-color: #cce5ff; color: #004085; }
+    .type-suite { background-color: #d4edda; color: #155724; }
+    .type-family { background-color: #fff3cd; color: #856404; }
+    
+    .stats-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+        border-radius: 6px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .quick-actions {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Управление номерами</h1>
+        <div>
+            <a href="{% url 'admin:booking_room_add' %}" class="btn btn-success btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-plus"></i>
+                </span>
+                <span class="text">Добавить номер</span>
+            </a>
+            <a href="{% url 'admin:booking_room_import' %}" class="btn btn-info btn-icon-split ml-2">
+                <span class="icon text-white-50">
+                    <i class="fas fa-file-import"></i>
+                </span>
+                <span class="text">Импорт</span>
+            </a>
+            <a href="{% url 'admin:booking_room_export' %}" class="btn btn-secondary btn-icon-split ml-2">
+                <span class="icon text-white-50">
+                    <i class="fas fa-file-export"></i>
+                </span>
+                <span class="text">Экспорт</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row stats-container">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-item bg-white shadow-sm">
+                <div class="stat-value text-primary">{{ total_rooms }}</div>
+                <div class="stat-label">Всего номеров</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-item bg-white shadow-sm">
+                <div class="stat-value text-success">{{ available_rooms }}</div>
+                <div class="stat-label">Доступно</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-item bg-white shadow-sm">
+                <div class="stat-value text-warning">{{ booked_rooms }}</div>
+                <div class="stat-label">Забронировано сейчас</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-item bg-white shadow-sm">
+                <div class="stat-value text-info">{{ avg_price|floatformat:0 }} ₽</div>
+                <div class="stat-label">Средняя цена/ночь</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="row quick-actions">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Быстрые действия</h6>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulkAvailabilityModal">
+                            <i class="fas fa-check"></i> Массовое включение
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#bulkUnavailabilityModal">
+                            <i class="fas fa-ban"></i> Массовое отключение
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkPriceModal">
+                            <i class="fas fa-dollar-sign"></i> Массовое изменение цен
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры и Поиск -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow filter-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Фильтры и поиск</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label for="hotel" class="form-label">Отель</label>
+                            <select name="hotel" id="hotel" class="form-select">
+                                <option value="">Все отели</option>
+                                {% for hotel in hotels %}
+                                <option value="{{ hotel.id }}" {% if request.GET.hotel == hotel.id|stringformat:"i" %}selected{% endif %}>{{ hotel.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="room_type" class="form-label">Тип номера</label>
+                            <select name="room_type" id="room_type" class="form-select">
+                                <option value="">Все типы</option>
+                                {% for type_code, type_name in room_types %}
+                                <option value="{{ type_code }}" {% if request.GET.room_type == type_code %}selected{% endif %}>{{ type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="available" class="form-label">Доступность</label>
+                            <select name="available" id="available" class="form-select">
+                                <option value="">Все номера</option>
+                                <option value="1" {% if request.GET.available =='1' %}selected{% endif %}>Доступные</option>
+                                <option value="0" {% if request.GET.available =='0' %}selected{% endif %}>Недоступные</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="min_price" class="form-label">Цена от</label>
+                            <input type="number" class="form-control" id="min_price" name="min_price" value="{{ request.GET.min_price }}" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="max_price" class="form-label">Цена до</label>
+                            <input type="number" class="form-control" id="max_price" name="max_price" value="{{ request.GET.max_price }}" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="capacity" class="form-label">Вместимость</label>
+                            <select name="capacity" id="capacity" class="form-select">
+                                <option value="">Любая</option>
+                                <option value="1" {% if request.GET.capacity =='1' %}selected{% endif %}>1 гость</option>
+                                <option value="2" {% if request.GET.capacity =='2' %}selected{% endif %}>2 гостя</option>
+                                <option value="3" {% if request.GET.capacity =='3' %}selected{% endif %}>3 гостя</option>
+                                <option value="4" {% if request.GET.capacity =='4' %}selected{% endif %}>4 гостя</option>
+                                <option value="5" {% if request.GET.capacity =='5' %}selected{% endif %}>5+ гостей</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">Поиск</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Номер, описание..." value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Сортировка</label>
+                            <select name="sort" id="sort" class="form-select">
+                                <option value="hotel__name,number" {% if request.GET.sort =='hotel__name,number' %}selected{% endif %}>По отелю и номеру</option>
+                                <option value="price_per_night" {% if request.GET.sort =='price_per_night' %}selected{% endif %}>По цене (возр.)</option>
+                                <option value="-price_per_night" {% if request.GET.sort =='-price_per_night' %}selected{% endif %}>По цене (убыв.)</option>
+                                <option value="capacity" {% if request.GET.sort =='capacity' %}selected{% endif %}>По вместимости (возр.)</option>
+                                <option value="-capacity" {% if request.GET.sort =='-capacity' %}selected{% endif %}>По вместимости (убыв.)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Применить фильтры</button>
+                            <a href="{% url 'admin:booking_room_changelist' %}" class="btn btn-secondary">Сбросить</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список номеров -->
+    <div class="row">
+        {% for room in rooms %}
+        <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+            <div class="card shadow room-card h-100">
+                <div class="position-relative">
+                    {% if room.image %}
+                        <img src="{{ room.image.url }}" class="room-image" alt="Номер {{ room.number }}">
+                    {% else %}
+                        <img src="{% static 'admin/img/default_room.jpg' %}" class="room-image" alt="Номер {{ room.number }}">
+                    {% endif %}
+                    
+                    <div class="hotel-badge">{{ room.hotel.name }}</div>
+                    
+                    {% if room.available %}
+                        <div class="status-badge status-available">Доступен</div>
+                    {% else %}
+                        <div class="status-badge status-unavailable">Недоступен</div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">Номер {{ room.number }}</h5>
+                        <span class="room-type-badge 
+                            {% if room.room_type == 'standard' %}type-standard
+                            {% elif room.room_type == 'deluxe' %}type-deluxe
+                            {% elif room.room_type == 'suite' %}type-suite
+                            {% else %}type-family{% endif %}">
+                            {{ room.get_room_type_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="room-price">{{ room.price_per_night }} ₽ / ночь</div>
+                        <div class="room-capacity"><i class="fas fa-user-friends"></i> {{ room.capacity }}</div>
+                    </div>
+                    
+                    <p class="card-text small text-muted">{{ room.description|truncatechars:100 }}</p>
+                    
+                    <div class="action-buttons">
+                        <a href="{% url 'admin:booking_room_change' room.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'admin:room_bookings' room.id %}" class="btn btn-sm btn-info">
+                            <i class="fas fa-calendar-check"></i>
+                        </a>
+                        {% if room.available %}
+                        <a href="{% url 'admin:room_toggle_availability' room.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-toggle-off"></i>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'admin:room_toggle_availability' room.id %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-toggle-on"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-top-0 text-center">
+                    <div class="d-grid">
+                        <a href="{% url 'admin:booking_room_change' room.id %}" class="btn btn-outline-primary btn-sm stretched-link">Управление номером</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted mb-3">
+                <i class="fas fa-bed fa-4x"></i>
+            </div>
+            <h3>Номера не найдены</h3>
+            <p>Попробуйте изменить параметры фильтрации или добавьте новые номера.</p>
+            <a href="{% url 'admin:booking_room_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Добавить номер
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for i in paginator.page_range %}
+                {% if page_obj.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Модальные окна для массовых действий -->
+<!-- Модальное окно включения доступности -->
+<div class="modal fade" id="bulkAvailabilityModal" tabindex="-1" aria-labelledby="bulkAvailabilityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkAvailabilityModalLabel">Массовое включение доступности</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'admin:room_bulk_availability' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="hotel_filter" class="form-label">Отель</label>
+                        <select id="hotel_filter" name="hotel_filter" class="form-select">
+                            <option value="">Все отели</option>
+                            {% for hotel in hotels %}
+                            <option value="{{ hotel.id }}">{{ hotel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room_type_filter" class="form-label">Тип номера</label>
+                        <select id="room_type_filter" name="room_type_filter" class="form-select">
+                            <option value="">Все типы</option>
+                            {% for type_code, type_name in room_types %}
+                            <option value="{{ type_code }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm_availability" name="confirm_availability" required>
+                        <label class="form-check-label" for="confirm_availability">
+                            Подтверждаю, что хочу сделать выбранные номера доступными для бронирования
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Включить доступность</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно отключения доступности -->
+<div class="modal fade" id="bulkUnavailabilityModal" tabindex="-1" aria-labelledby="bulkUnavailabilityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkUnavailabilityModalLabel">Массовое отключение доступности</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'admin:room_bulk_unavailability' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="hotel_filter_unavail" class="form-label">Отель</label>
+                        <select id="hotel_filter_unavail" name="hotel_filter" class="form-select">
+                            <option value="">Все отели</option>
+                            {% for hotel in hotels %}
+                            <option value="{{ hotel.id }}">{{ hotel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room_type_filter_unavail" class="form-label">Тип номера</label>
+                        <select id="room_type_filter_unavail" name="room_type_filter" class="form-select">
+                            <option value="">Все типы</option>
+                            {% for type_code, type_name in room_types %}
+                            <option value="{{ type_code }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Причина отключения</label>
+                        <select id="reason" name="reason" class="form-select" required>
+                            <option value="">Выберите причину...</option>
+                            <option value="maintenance">Техническое обслуживание</option>
+                            <option value="renovation">Ремонт</option>
+                            <option value="reserved">Зарезервировано</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Примечание</label>
+                        <textarea id="note" name="note" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm_unavailability" name="confirm_unavailability" required>
+                        <label class="form-check-label" for="confirm_unavailability">
+                            Подтверждаю, что хочу сделать выбранные номера недоступными для бронирования
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-danger">Отключить доступность</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно изменения цен -->
+<div class="modal fade" id="bulkPriceModal" tabindex="-1" aria-labelledby="bulkPriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkPriceModalLabel">Массовое изменение цен</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'admin:room_bulk_price_change' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="hotel_filter_price" class="form-label">Отель</label>
+                        <select id="hotel_filter_price" name="hotel_filter" class="form-select">
+                            <option value="">Все отели</option>
+                            {% for hotel in hotels %}
+                            <option value="{{ hotel.id }}">{{ hotel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="room_type_filter_price" class="form-label">Тип номера</label>
+                        <select id="room_type_filter_price" name="room_type_filter" class="form-select">
+                            <option value="">Все типы</option>
+                            {% for type_code, type_name in room_types %}
+                            <option value="{{ type_code }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price_change_type" class="form-label">Тип изменения</label>
+                        <select id="price_change_type" name="price_change_type" class="form-select" required>
+                            <option value="percentage">Процентное изменение</option>
+                            <option value="fixed_amount">Фиксированная сумма</option>
+                            <option value="set_price">Установить конкретную цену</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price_change_value" class="form-label">Значение</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="price_change_value" name="price_change_value" required>
+                            <span class="input-group-text" id="priceTypeAddon">₽</span>
+                        </div>
+                        <div class="form-text" id="priceHelpText">
+                            Для процентного изменения: положительное значение для увеличения, отрицательное для уменьшения (напр., 10 или -5).
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm_price_change" name="confirm_price_change" required>
+                        <label class="form-check-label" for="confirm_price_change">
+                            Подтверждаю, что хочу изменить цены выбранных номеров
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Изменить цены</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обновление подсказки при изменении типа изменения цены
+        const priceChangeType = document.getElementById('price_change_type');
+        const priceHelpText = document.getElementById('priceHelpText');
+        const priceTypeAddon = document.getElementById('priceTypeAddon');
+        
+        priceChangeType.addEventListener('change', function() {
+            switch(this.value) {
+                case 'percentage':
+                    priceHelpText.textContent = 'Для процентного изменения: положительное значение для увеличения, отрицательное для уменьшения (напр., 10 или -5).';
+                    priceTypeAddon.textContent = '%';
+                    break;
+                case 'fixed_amount':
+                    priceHelpText.textContent = 'Введите сумму, которую нужно добавить или вычесть из текущей цены номера.';
+                    priceTypeAddon.textContent = '₽';
+                    break;
+                case 'set_price':
+                    priceHelpText.textContent = 'Введите новую цену, которая будет установлена для всех выбранных номеров.';
+                    priceTypeAddon.textContent = '';
+                    break;
+            }
+        });
+        
+        // Инициализация тултипов Bootstrap
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

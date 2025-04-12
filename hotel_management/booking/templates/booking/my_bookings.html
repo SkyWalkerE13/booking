@@ -1,10 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Мои бронирования</h2>
+    
+    {% if bookings %}
+        <div class="row">
+            {% for booking in bookings %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Бронирование #{{ booking.booking_id }}</h5>
+                            <p class="card-text">
+                                <strong>Даты:</strong> {{ booking.check_in_date }} - {{ booking.check_out_date }}<br>
+                                <strong>Количество гостей:</strong> {{ booking.guests }}<br>
+                                <strong>Статус:</strong> {{ booking.status }}<br>
+                                <strong>Стоимость:</strong> {{ booking.total_price }} $
+                            </p>
+                            <div class="btn-group">
+                                <a href="{% url 'booking_detail' booking.booking_id %}" class="btn btn-info btn-sm">Подробнее</a>
+                                {% if booking.status == 'pending' %}
+                                    <a href="{% url 'payment_process' booking.booking_id %}" class="btn btn-primary btn-sm">Оплатить</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            У вас пока нет бронирований. <a href="{% url 'home' %}" class="alert-link">Найдите свой идеальный номер!</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

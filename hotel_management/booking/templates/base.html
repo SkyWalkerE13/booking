@@ -1,169 +1,251 @@
-{% load static %}
-<!DOCTYPE html>
 
+{% load static %}
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hotel Booking{% endblock %}</title>
+    <title>{% block title %}HMS{% endblock %}</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
 
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Bootstrap CSS -->
+    <link href="{% static 'booking/img/favicon.ico' %}" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="{% static 'booking/lib/animate/animate.min.css' %}" rel="stylesheet">
+    <link href="{% static 'booking/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'booking/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css' %}" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'booking/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="{% static 'templates/travel-agency-html-template/css/style.css' %}" rel="stylesheet">
     <!-- FontAwesome для иконок -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <!-- Собственные стили -->
     <style>
-        :root {
-            --primary-color: #0071c2;
-            --secondary-color: #003580;
-            --accent-color: #f2f2f2;
-        }
+:root {
+    --primary-color: #0071c2;
+    --secondary-color: #003580;
+    --accent-color: #f2f2f2;
+}
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--accent-color);
-        }
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--accent-color);
+}
 
-        .navbar {
-            background-color: var(--primary-color);
-        }
+.navbar {
+    background-color: var(--primary-color);
+}
 
-        .navbar-brand {
-            color: white !important;
-            font-weight: bold;
-        }
+.navbar-brand {
+    color: white !important;
+    font-weight: bold;
+}
 
-        .nav-link {
-            color: white !important;
-        }
+.nav-link {
+    color: white !important;
+}
 
-        .card {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
 
-        .card:hover {
-            transform: scale(1.02);
-        }
+.card:hover {
+    transform: scale(1.02);
+}
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--secondary-color);
-        }
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--secondary-color);
+}
 
-        .search-container {
-            background-color: var(--secondary-color);
-            padding: 20px;
-            border-radius: 8px;
-        }
+.search-container {
+    background-color: var(--secondary-color);
+    padding: 20px;
+    border-radius: 8px;
+}
 
-        .room-card .card-img-top {
-            height: 250px;
-            object-fit: cover;
-        }
+.room-card .card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Навигация -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-hotel"></i> HotelBooking
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Главная</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'room_list' %}">Номера</a>
-                    </li>
-                </ul>
+</head>
 
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'my_bookings' %}">Мои бронирования</a></li>
-                                {% if user.is_staff %}
-                                    <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Панель администратора</a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">Выйти</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Войти</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light" href="{% url 'register' %}">Регистрация</a>
-                        </li>
-                    {% endif %}
-                </ul>
+<body>
+    <!-- Spinner Start -->
+    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Загрузка...</span>
+        </div>
+    </div>
+    <!-- Spinner End -->
+
+    <!-- Topbar Start -->
+    <div class="container-fluid bg-dark px-5 d-none d-lg-block">
+        <div class="row gx-0">
+            <div class="col-lg-8 text-center text-lg-start mb-2 mb-lg-0">
+                <div class="d-inline-flex align-items-center" style="height: 45px;">
+                    <small class="me-3 text-light"><i class="fa fa-map-marker-alt me-2"></i> Mangilik el 55/1 Expo C 1.3</small>
+                    <small class="me-3 text-light"><i class="fa fa-phone-alt me-2"></i>+7 (705) 973-80-57</small>
+                    <small class="text-light"><i class="fa fa-envelope-open me-2"></i>erzhan.ikramov@gmail.com</small>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center text-lg-end">
+                <div class="d-inline-flex align-items-center" style="height: 45px;">
+                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href="https://twitter.com/"><i class="fab fa-twitter fw-normal"></i></a>
+                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href="#"><i class="fab fa-facebook-f fw-normal"></i></a>
+                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href="#"><i class="fab fa-instagram fw-normal"></i></a>
+                </div>
             </div>
         </div>
-    </nav>
-
-    <!-- Контейнер для сообщений -->
-    <div class="container mt-3">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
     </div>
+    <!-- Topbar End -->
 
-    <!-- Основное содержимое -->
-    {% block content %}{% endblock %}
+    <!-- Navbar Start -->
+    <div class="container-fluid position-relative p-0">
+        <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
+            <a href="{% url 'home' %}" class="navbar-brand p-0">
+                <h1 class="text-primary m-0"><i class="fa fa-hotel me-3"></i>HMS</h1>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="fa fa-bars"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <div class="navbar-nav ms-auto py-0">
+                    <a href="{% url 'home' %}" class="nav-item nav-link {% if request.path == '/' %}active{% endif %}">Главная</a>
+                    <a href="{% url 'about' %}" class="nav-item nav-link {% if 'about' in request.path %}active{% endif %}">О нас</a>
+                    <a href="{% url 'hotels' %}" class="nav-item nav-link {% if 'hotels' in request.path %}active{% endif %}">Отели</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'my_bookings' %}" class="nav-item nav-link {% if 'bookings' in request.path %}active{% endif %}">Мои бронирования</a>
+                        <a href="{% url 'logout' %}" class="nav-item nav-link">Выход</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="nav-item nav-link {% if 'login' in request.path %}active{% endif %}">Вход</a>
+                        <a href="{% url 'register' %}" class="nav-item nav-link {% if 'register' in request.path %}active{% endif %}">Регистрация</a>
+                    {% endif %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin_dashboard' %}" class="nav-item nav-link {% if 'admin-panel' in request.path %}active{% endif %}">Администрирование</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- Navbar End -->
 
-    <!-- Футер -->
-    <footer class="bg-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>О нас</h5>
-                    <p>Бронирование отелей по всему миру с легкостью и комфортом.</p>
+    {% block header_content %}{% endblock %}
+
+    <!-- Main Content Start -->
+    <div class="container-xxl py-5">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    <!-- Main Content End -->
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-white mb-3">Компания</h4>
+                    <a class="btn btn-link" href="{% url 'about' %}">О нас</a>
+                    <a class="btn btn-link" href="{% url 'contact' %}">Связаться с нами</a>
+                    <a class="btn btn-link" href="#">Условия использования</a>
+                    <a class="btn btn-link" href="#">Конфиденциальность</a>
                 </div>
-                <div class="col-md-4">
-                    <h5>Контакты</h5>
-                    <p>
-                        <i class="fas fa-phone"></i> +7 (999) 123-45-67<br>
-                        <i class="fas fa-envelope"></i> support@hotelbooking.ru
-                    </p>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-white mb-3">Контакты</h4>
+                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>esil district. mangilik el 55/1, Astana</p>
+                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+7 (707) 973-80-57</p>
+                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>erzhan.ikramov@gmail.com</p>
+                    <div class="d-flex pt-2">
+                        <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-twitter"></i></a>
+                        <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h5>Социальные сети</h5>
-                    <div class="social-links">
-                        <a href="#" class="text-primary me-2"><i class="fab fa-facebook fa-2x"></i></a>
-                        <a href="#" class="text-info me-2"><i class="fab fa-twitter fa-2x"></i></a>
-                        <a href="#" class="text-danger"><i class="fab fa-instagram fa-2x"></i></a>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-white mb-3">Галерея</h4>
+                    <div class="row g-2 pt-2">
+                        <div class="col-4">
+                            <img class="img-fluid bg-light p-1" src="{% static 'booking/img/596326048.jpg' %}" alt="">
+                        </div>
+                        <div class="col-4">
+                            <img class="img-fluid bg-light p-1" src="{% static 'booking/img/596326129 — копия.jpg' %}" alt="">
+                        </div>
+                        <div class="col-4">
+                            <img class="img-fluid bg-light p-1" src="{% static 'booking/img/596337321.jpg' %}" alt="">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-white mb-3">Новостная рассылка</h4>
+                    <p>Подпишитесь на нашу рассылку, чтобы получать новости и спецпредложения</p>
+                    <div class="position-relative mx-auto" style="max-width: 400px;">
+                        <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" placeholder="Ваш email">
+                        <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Подписаться</button>
                     </div>
                 </div>
             </div>
-            <hr>
-            <div class="text-center">
-                © 2025 HotelBooking. Все права защищены.
+        </div>
+        <div class="container">
+            <div class="copyright">
+                <div class="row">
+                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                        &copy; <a class="border-bottom" href="#">HMS</a>, All rights reserved.
+                    </div>
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
+    <!-- Footer End -->
 
-    <!-- Bootstrap JS и зависимости -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'booking/lib/wow/wow.min.js' %}"></script>
+    <script src="{% static 'booking/lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'booking/lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'booking/lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'booking/lib/tempusdominus/js/moment.min.js' %}"></script>
+    <script src="{% static 'booking/lib/tempusdominus/js/moment-timezone.min.js' %}"></script>
+    <script src="{% static 'booking/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+
+    <!-- Template Javascript -->
+    <script src="{% static 'booking/js/main.js' %}"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
-</html>
+
+</html> 
